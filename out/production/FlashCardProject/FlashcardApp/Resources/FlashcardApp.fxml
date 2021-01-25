@@ -14,7 +14,6 @@
               <Insets bottom="10" right="10" />
           </padding>
             <Button mnemonicParsing="false" onAction="#changeToCreateDeckScene" text="New Deck" />
-            <Button mnemonicParsing="false" text="Edit Deck" />
             <Button mnemonicParsing="false" onAction="#studySelectedDeck" text="Study" />
       </HBox>
    </bottom>
