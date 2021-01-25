@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="FlashcardApp.AddCardsController">
+   <children>
+      <Button layoutX="188.0" layoutY="273.0" mnemonicParsing="false" onAction="#addCardsToDeck" text="Add Another Card" />
+      <Button layoutX="315.0" layoutY="273.0" mnemonicParsing="false" onAction="#returnToHome" text="Finish &amp; Save" />
+      <TextArea fx:id="question" layoutX="188.0" layoutY="91.0" prefHeight="57.0" prefWidth="225.0" />
+      <TextArea fx:id="answer" layoutX="188.0" layoutY="165.0" prefHeight="57.0" prefWidth="225.0" />
+      <Label layoutX="132.0" layoutY="111.0" text="Term:">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <Label layoutX="120.0" layoutY="185.0" text="Definition:">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <Label layoutX="214.0" layoutY="34.0" text="Add New Card">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+   </children>
+</AnchorPane>

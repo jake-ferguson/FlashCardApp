@@ -1,0 +1,250 @@
+package FlashcardApp;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import java.sql.*;
+import java.util.ArrayList;
+/*
+This class is used to manage the database connection. This is a singleton class
+to ensure only one instance of class is created
+ */
+
+
+public class DataSource {
+    //Set Path for database connection
+    public static final String CONNECTION_STRING = "jdbc:sqlite:/Users/jakeferguson/FlashCardProject/FlashCardApp.DB";
+
+    public static final String TABLE_DECKS = "TABLE_DECKS";
+    public static final String COLUMN_DECK_ID = "id";
+    public static final String COLUMN_DECK_NAME = "deckName";
+    public static final String TABLE_CARDS = "TABLE_CARDS";
+    public static final String COLUMN_CARD_ID = "id";
+    public static final String COLUMN_CARD_QUESTION = "question";
+    public static final String COLUMN_CARD_ANSWER = "answer";
+    public static final String COLUMN_CARD_COUNTER = "counter";
+
+    private PreparedStatement insertIntoDecks;
+    private PreparedStatement insertIntoCards;
+    private PreparedStatement queryDeckByName;
+
+    private PreparedStatement queryDecks;
+    private PreparedStatement queryCards;
+
+    private Connection conn;
+
+    private static DataSource instance = new DataSource();
+
+    //Private constructor
+    private DataSource() {
+
+    }
+
+    //Public getter to access singleton instance from controllers
+    public static DataSource getInstance() {
+        return instance;
+
+    }
+
+    //Create database queries
+
+    public static final String INSERT_DECK = "INSERT INTO " + TABLE_DECKS +
+            '(' + COLUMN_DECK_NAME + ") VALUES( ?)";
+
+    public static final String INSERT_CARD = "INSERT INTO " + TABLE_CARDS +
+            '(' + COLUMN_CARD_QUESTION + " , " + COLUMN_CARD_ANSWER + " , " +
+            COLUMN_CARD_COUNTER + " , " + COLUMN_CARD_ID + ") VALUES( ?, ?, ?, ?)";
+
+    public static final String QUERY_DECK_BY_NAME = " SELECT " + COLUMN_DECK_ID + " FROM " + TABLE_DECKS +
+                                                    " WHERE " + COLUMN_DECK_NAME + " = ?";
+
+    public static final String QUERY_DECKS = " SELECT " + TABLE_DECKS + " . " + COLUMN_DECK_NAME + " FROM " +
+            TABLE_DECKS;
+
+    public static final String QUERY_CARDS = " SELECT " + COLUMN_CARD_QUESTION + ", " + COLUMN_CARD_ANSWER +
+            " FROM " + TABLE_CARDS + " WHERE " + COLUMN_CARD_ID + " = ?";
+
+
+    public boolean open() {
+
+        try {
+            //Create connection to database
+            conn = DriverManager.getConnection(CONNECTION_STRING);
+            Statement statement = conn.createStatement();
+            Statement statement1 = conn.createStatement();
+
+            //Creates Databases for Cards and Decks if they don't exist
+
+            statement.execute("CREATE TABLE IF NOT EXISTS TABLE_DECKS" +
+                    "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT ," +
+                    " deckName TEXT)");
+
+            statement1.execute("CREATE TABLE IF NOT EXISTS TABLE_CARDS" +
+                    "(id INTEGER NOT NULL PRIMARY KEY," +
+                    " question TEXT, answer TEXT, counter INTEGER)");
+
+            // Create prepared statements
+            insertIntoDecks = conn.prepareStatement(INSERT_DECK, Statement.RETURN_GENERATED_KEYS);
+            insertIntoCards = conn.prepareStatement(INSERT_CARD, Statement.RETURN_GENERATED_KEYS);
+            queryDecks = conn.prepareStatement(QUERY_DECKS);
+            queryDeckByName = conn.prepareStatement(QUERY_DECK_BY_NAME);
+            queryCards = conn.prepareStatement(QUERY_CARDS);
+
+            return true;
+
+        }
+
+        catch (SQLException e) {
+
+            System.out.println("Could not connect to the database: " + e.getMessage());
+
+            return false;
+        }
+    }
+
+    public void close() {
+
+        try {
+
+            conn.close();
+
+           if (insertIntoCards != null) {
+               insertIntoCards.close();
+           }
+           if (insertIntoDecks != null) {
+               insertIntoDecks.close();
+           }
+
+           if (queryDecks != null) {
+               queryDecks.close();
+           }
+           if (queryCards != null) {
+               queryCards.close();
+           }
+            if (conn != null) {
+                conn.close();
+            }
+
+        }
+        catch (SQLException e) {
+
+            System.out.println("Couldn't close connection: " + e.getMessage());
+        }
+    }
+
+    //Insert new deck into database
+    public int insertNewDeck(String deckName) throws SQLException {
+        // Set parameter index and execute prepared statement
+        insertIntoDecks.setString(1, deckName);
+
+            // Check to make sure only one Deck is inserted
+            int affectedRows = insertIntoDecks.executeUpdate();
+
+            if (affectedRows != 1) {
+                throw new SQLException("Couldn't insert new deck.");
+            }
+            //Get deck ID generated by database
+            ResultSet generatedKeys = insertIntoDecks.getGeneratedKeys();
+
+            // Return Deck ID so can be accessed by controller
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+
+            }
+
+        return -1;
+
+    }
+
+
+    //method to insert a new card into the deck.
+    public void insertNewCard(String question, String answer, int deckID) throws SQLException {
+
+        // Set parameter index and execute prepared statement
+        insertIntoCards.setString(1, question);
+        insertIntoCards.setString(2, answer);
+        insertIntoCards.setInt(4, deckID);
+        int affectedRows = insertIntoCards.executeUpdate();
+
+        if (affectedRows != 1) {
+            throw new SQLException("Couldn't insert new card.");
+        }
+    }
+
+//  Query Cards for studying using Deck Id
+    public ArrayList<Card> queryCards(int deckId){
+
+        try {
+            // Set parameter index and execute prepared statement
+             queryCards.setInt(1,deckId);
+             ResultSet results = queryCards.executeQuery();
+
+            ArrayList<Card> cards = new ArrayList<>();
+
+            while (results.next()) {
+                // Add queried cards to array list created above
+                cards.add(new Card(results.getString("question"),results.getString("answer")));
+
+            }
+
+            // Return list of cards
+            return cards;
+
+        }
+
+        catch (SQLException e) {
+
+            System.out.println("Card Query failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    //Method to return deck ID querying by deck name
+    public int queryDeckByName(String name) throws SQLException {
+
+        int deckID =0;
+        // Set parameter index and execute prepared statement
+        queryDeckByName.setString(1, name);
+        ResultSet rs = queryDeckByName.executeQuery();
+
+            //Set and return Deck ID so can be accessed by Controller
+            if (rs.next()) {
+                deckID = rs.getInt(1);
+
+            }
+            else {
+
+                return -1;
+            }
+            return deckID;
+        }
+
+//  Query Decks for the list view
+    public ObservableList<Deck> queryDecks(){
+
+        //Create observable list to populate w/ deck values
+        ObservableList<Deck> observableDeckList = FXCollections.observableArrayList();
+
+        try (
+
+             //Execute prepared statement to query decks
+             ResultSet results = queryDecks.executeQuery();) {
+
+            while (results.next()) {
+                //Add queried decks to the list
+                observableDeckList.add(new Deck(results.getString("deckName")));
+
+            }
+
+            return observableDeckList;
+        }
+
+        catch (SQLException e) {
+            System.out.println("Query failed: " + e.getMessage());
+            return null;
+        }
+    }
+}
+
+
+
+

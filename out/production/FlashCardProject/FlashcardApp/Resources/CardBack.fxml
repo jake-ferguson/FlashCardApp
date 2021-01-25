@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="FlashcardApp.CardBackController">
+   <children>
+      <Label layoutX="102.0" layoutY="170.0" text="Answer:">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <Button layoutX="281.0" layoutY="270.0" mnemonicParsing="false" onAction="#flipCardToFront" text="Flip" />
+      <TextArea fx:id="answer" layoutX="199.0" layoutY="143.0" prefHeight="82.0" prefWidth="219.0" />
+   </children>
+</AnchorPane>
